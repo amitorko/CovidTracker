@@ -12,6 +12,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class DataService {
@@ -22,9 +24,11 @@ public class DataService {
      * prints the state of the affected
      * scheduled to run every hour
      */
+    private List<LocationData> data= new ArrayList<>();
     @PostConstruct
     @Scheduled(cron = "**1***")
     public void reqData() throws IOException, InterruptedException {
+        List newData=new ArrayList();
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(Confirm_Case_URL))
@@ -35,9 +39,15 @@ public class DataService {
         Iterable<CSVRecord> records;
         records = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(csvReader);
         for (CSVRecord record : records) {
-            String state = record.get("Province/State");
-            System.out.println(state);
+            LocationData locationData=new LocationData();
+            locationData.setState(record.get("Province/State"));
+            locationData.setCountry(record.get("Country/Region"));
+            locationData.setTotalCases(record.get(record.size()-1));
+            System.out.println(locationData);
+            newData.add(locationData);
+
         }
+        this.data=newData;
 
     }
 }
